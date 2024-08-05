@@ -63,6 +63,9 @@ export default hot(() => {
 
   const isSearchUnchanged = inputValue === lastSearched;
 
+  // Add a new condition to check if the input value is empty
+  const isInputEmpty = inputValue.trim() === '';
+
   return (
     <div className='QuickSearch'>
       <div className='Input-container'>
@@ -74,7 +77,7 @@ export default hot(() => {
         <button
           onClick={handleSearchClick}
           className='SearchButton'
-          disabled={dataReturned.isLoading || isSearchUnchanged} // Disable if loading or search hasn't changed
+          disabled={dataReturned.isLoading || isSearchUnchanged || isInputEmpty} // Disable if loading, search hasn't changed, or input is empty
         >
           {dataReturned.isLoading ? (
             <Spinner width={16} />
