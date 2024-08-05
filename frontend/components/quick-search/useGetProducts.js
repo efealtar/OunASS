@@ -2,53 +2,68 @@ import React from 'react';
 import axios from 'axios';
 import 'regenerator-runtime';
 
-const url = 'http://localhost:3000/quick-search?searchString';
+const url = 'http://localhost:3000/quick-search?searchString=';
 const defaultTextObject = { text: '', color: 'gray' };
 
 const useGetProducts = () => {
   const [searchData, setSearchData] = React.useState('');
-  const [dataReturned, setdataReturned] = React.useState({
+  const [dataReturned, setDataReturned] = React.useState({
     allData: {},
     isLoading: false,
   });
   const [errorMessage, setErrorMessage] = React.useState(defaultTextObject);
 
+  const cancelTokenSource = React.useRef(axios.CancelToken.source());
+
   const getData = async () => {
+    if (searchData.trim() === '') {
+      setDataReturned({ allData: {}, isLoading: false });
+      return;
+    }
+
     try {
-      setdataReturned({ allData: {}, isLoading: true });
-      const searchedData = await axios.get(`${url}=${searchData}`);
+      // Indicate loading state before the request
+      setDataReturned((prevState) => ({ ...prevState, isLoading: true }));
+
+      cancelTokenSource.current.cancel(
+        'Operation canceled due to new request.',
+      );
+      cancelTokenSource.current = axios.CancelToken.source();
+
+      const response = await axios.get(`${url}${searchData}`, {
+        cancelToken: cancelTokenSource.current.token,
+      });
+
+      // Set the data and indicate loading is complete
+      setDataReturned({ allData: response.data, isLoading: false });
       setErrorMessage(defaultTextObject);
-      setdataReturned({ allData: searchedData, isLoading: false });
     } catch (error) {
-      const { message } = error;
-      if (message.includes('Network'))
-        setErrorMessage({
-          text: 'Network Error',
-          color: 'red',
-        });
-      if (message.includes('500'))
-        setErrorMessage({
-          text: 'Internal Server Error',
-          color: 'red',
-        });
-      if (message.includes('404'))
-        setErrorMessage({
-          text: 'Not found!',
-          color: 'red',
-        });
+      if (!axios.isCancel(error)) {
+        const message = error.response
+          ? error.response.data.message
+          : error.message;
+        setErrorMessage({ text: message, color: 'red' });
+        // Indicate loading is complete even on error
+        setDataReturned((prevState) => ({ ...prevState, isLoading: false }));
+      }
     }
   };
+
   React.useEffect(() => {
-    if (searchData.length > 0) getData();
-    if (searchData.length === 0)
-      setdataReturned({ allData: {}, isLoading: false });
+    getData();
+
+    // Cleanup function to cancel ongoing requests when the component unmounts or searchData changes
+    return () => {
+      cancelTokenSource.current.cancel(
+        'Component unmounted or searchData changed',
+      );
+    };
   }, [searchData]);
+
   return {
     setSearchData,
     dataReturned,
     errorMessage,
-    searchData,
-    setErrorMessage,
   };
 };
 

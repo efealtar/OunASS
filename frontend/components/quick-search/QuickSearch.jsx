@@ -11,26 +11,40 @@ const Error = ({ children, color }) => (
   </p>
 );
 
-const ApiModal = ({ dataReturned }) => {
-  const returnedProducts = dataReturned?.data?.products?.map((product) => (
-    <div key={product.name} className='ApiModal'>
-      <img src={product.image} width={80} />
-      <div>
-        <b>{product.designerCategoryName}</b>
-      </div>
-      <div>{product.name}</div>
-    </div>
-  ));
+const ApiModal = ({ dataReturned, hasSearched, isLoading }) => {
+  if (!hasSearched) {
+    return null;
+  }
 
-  return returnedProducts?.length > 0 ? (
-    <div className='ApiModalBox'>{returnedProducts}</div>
-  ) : null;
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  const products = dataReturned.products;
+  if (products && products.length > 0) {
+    return (
+      <div className='ApiModalBox'>
+        {products.map((product) => (
+          <div key={product.name} className='ApiModal'>
+            <img src={product.image} alt={product.name} width={80} />
+            <div>
+              <b>{product.designerCategoryName}</b>
+            </div>
+            <div>{product.name}</div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return <div>No products found</div>;
 };
 
 export default hot(() => {
   const { setSearchData, dataReturned, errorMessage } = useGetProducts();
   const [inputValue, setInputValue] = useState('');
   const [lastSearched, setLastSearched] = useState('');
+  const [hasSearched, setHasSearched] = useState(false); // New state to track if search has been initiated
 
   const searchChangeHandler = (e) => {
     setInputValue(e.target.value);
@@ -39,6 +53,7 @@ export default hot(() => {
   const handleSearchClick = () => {
     setSearchData(inputValue);
     setLastSearched(inputValue);
+    setHasSearched(true); // Update here when search is actually performed
   };
 
   const areResultsEmpty =
@@ -71,7 +86,11 @@ export default hot(() => {
           )}
         </button>
       </div>
-      <ApiModal dataReturned={dataReturned.allData} />
+      <ApiModal
+        dataReturned={dataReturned.allData}
+        hasSearched={hasSearched}
+        isLoading={dataReturned.isLoading}
+      />
       {errorMessage.text.length > 0 ? (
         <Error color={errorMessage.color}>{errorMessage.text}</Error>
       ) : null}
