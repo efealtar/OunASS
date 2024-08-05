@@ -1,0 +1,26 @@
+.Checkbox {
+  background-color: white;
+  border: 1px solid #bbb;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 20px;
+  height: 20px;
+
+  input[type=checkbox] {
+    appearance: none;
+    border: none;
+    background: transparent;
+    margin: 0;
+    padding: 0;
+    outline: none;
+  }
+
+  &.is-checked,
+  &.is-indeterminate {
+    background-color: black;
+  }
+}

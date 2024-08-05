@@ -1,0 +1,28 @@
+.FormControlLabel {
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  align-content: center;
+  flex-wrap: no-wrap;
+
+  &:hover {
+    input[type=checkbox] {
+      border-color: black;
+    }
+
+    .FormControlLabel-text {
+      color: black;
+    }
+  }
+}
+
+.FormControlLabel-text {
+  color: #2d2d2d;
+  font-size: 14px;
+  padding: 0 10px;
+  pointer-events: none;
+  position: relative;
+  text-decoration: none;
+}

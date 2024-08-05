@@ -1,0 +1,31 @@
+.CheckboxTree-expandButton {
+  background-color: transparent;
+  border: 0;
+  color: #2d2d2d;
+  font-size: 14px;
+  margin: 0;
+  outline: 0;
+  padding: 0;
+  transform-origin: center;
+
+  &:hover {
+    color: black;
+  }
+
+  &.is-expanded {
+    transform: rotate(180deg);
+  }
+}
+
+.CheckboxTree .FormControlLabel {
+  margin-bottom: 10px;
+}
+
+.CheckboxTree.is-selected > .FormControlLabel .FormControlLabel-text {
+  color: black;
+  font-weight: bold;
+}
+
+.FormControlLabel + .CheckboxTree-categoryList {
+  padding-left: 30px;
+}

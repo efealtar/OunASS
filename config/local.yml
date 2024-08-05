@@ -1,0 +1,9 @@
+port: 3000
+
+redis:
+  host: localhost
+  port: 6379
+  db: 1
+  channelName: ounass
+
+productThumbnailBaseURL: https://ounass-prod.atgcdn.ae/small_light(p=thmb,ch=158,cc=fafafa,of=webp)/pub/media/catalog/product
