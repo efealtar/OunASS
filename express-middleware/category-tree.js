@@ -72,6 +72,77 @@ categoryTree = makeTree({
 // };
 */
 
+// #####OBJECT MUTATION APPROACH######## I KEEP IT IN CASE FURTER TECHNICAL COMPARISION
+
+// const csvToJson = require('csvtojson');
+// const path = require('path');
+// const fs = require('fs'); // to implement streams
+
+// let categoryTree = null;
+// let loadingPromise = null; // Promise to handle loading state
+
+// function buildTree(categories, mappings) {
+//   const idToCategoryNode = {};
+//   categories.forEach((category) => {
+//     idToCategoryNode[category.categoryId] = {
+//       id: category.categoryId,
+//       name: category.name,
+//       children: [],
+//     };
+//   });
+
+//   mappings.forEach((mapping) => {
+//     const parent = idToCategoryNode[mapping.parentId];
+//     const child = idToCategoryNode[mapping.categoryId];
+//     if (parent && child) {
+//       parent.children.push(child);
+//     }
+//   });
+
+//   return idToCategoryNode['1']; // Assumes the root category ID
+// }
+
+// function loadData() {
+//   loadingPromise = new Promise((resolve, reject) => {
+//     Promise.all([
+//       csvToJson().fromStream(
+//         fs.createReadStream(path.join(__dirname, '../data/categories.csv')),
+//       ),
+//       csvToJson().fromStream(
+//         fs.createReadStream(
+//           path.join(__dirname, '../data/category-parent-child-mapping.csv'),
+//         ),
+//       ),
+//     ])
+//       .then(([categories, mappings]) => {
+//         categoryTree = buildTree(categories, mappings);
+//         resolve();
+//       })
+//       .catch((error) => {
+//         console.error('Error loading category data:', error);
+//         categoryTree = null;
+//         reject(error);
+//       });
+//   });
+
+//   return loadingPromise;
+// }
+
+// // Call loadData when the server starts
+// loadData();
+
+// module.exports = async (req, res) => {
+//   if (!categoryTree && loadingPromise) {
+//     await loadingPromise; // Wait for data loading if it's still in progress(might be big file)
+//   }
+//   if (!categoryTree) {
+//     return res.status(503).send('Category data is not available');
+//   }
+//   return res.json(categoryTree);
+// };
+
+// #######RECURSIVE APPROACH###########
+
 const csvToJson = require('csvtojson');
 const path = require('path');
 const fs = require('fs'); // to implement streams
@@ -89,15 +160,21 @@ function buildTree(categories, mappings) {
     };
   });
 
-  mappings.forEach((mapping) => {
-    const parent = idToCategoryNode[mapping.parentId];
-    const child = idToCategoryNode[mapping.categoryId];
-    if (parent && child) {
-      parent.children.push(child);
-    }
-  });
+  function addChildren(node) {
+    mappings.forEach((mapping) => {
+      if (mapping.parentId === node.id) {
+        const childNode = idToCategoryNode[mapping.categoryId];
+        if (childNode) {
+          node.children.push(childNode);
+          addChildren(childNode); // Recursive call
+        }
+      }
+    });
+  }
 
-  return idToCategoryNode['1']; // Assumes the root category ID
+  const root = idToCategoryNode['1'];
+  addChildren(root); // Start recursion from the root
+  return root;
 }
 
 function loadData() {
@@ -131,7 +208,7 @@ loadData();
 
 module.exports = async (req, res) => {
   if (!categoryTree && loadingPromise) {
-    await loadingPromise; // Wait for data loading if it's still in progress(might be big file)
+    await loadingPromise; // Wait for data loading if it's still in progress
   }
   if (!categoryTree) {
     return res.status(503).send('Category data is not available');
